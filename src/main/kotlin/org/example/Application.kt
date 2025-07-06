@@ -19,6 +19,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.http.URLBuilder
 import io.ktor.http.URLProtocol
+import io.ktor.http.encodedPath
+import io.ktor.utils.io.*
 import kotlinx.coroutines.*
 import java.io.File
 import java.time.Duration
@@ -64,8 +66,8 @@ fun Application.module() {
     routing {
         route("/{...}") {
             handle {
-                val host = call.request.host()
-                val routeConfig = config.routes.find { it.domain == host }
+                val requestHost = call.request.host()
+                val routeConfig = config.routes.find { it.domain == requestHost }
 
                 if (routeConfig != null) {
                     val container = activeContainers.computeIfAbsent(routeConfig.domain) {
@@ -75,9 +77,9 @@ fun Application.module() {
 
                     val targetUrl = URLBuilder().apply {
                         protocol = URLProtocol.HTTP
-                        host = "localhost"
+                        this.host = "localhost"
                         port = container.port
-                        path(call.request.uri) // Corrected: Use path()
+                        encodedPath = call.request.path()
                         parameters.appendAll(call.request.queryParameters)
                     }
 
@@ -89,15 +91,18 @@ fun Application.module() {
                                 setBody(call.request.receiveChannel())
                             }
                         }
-                        call.respondBytesWriter(status = response.status, headers = response.headers) { // Corrected: Pass headers directly
-                            response.bodyAsChannel().copyTo(this) // Corrected: Use copyTo
+                        response.headers.forEach { name, values ->
+                            values.forEach { call.response.headers.append(name, it) }
+                        }
+                        call.respondBytesWriter(status = response.status) {
+                            response.bodyAsChannel().copyTo(this)
                         }
                     } catch (e: Exception) {
                         call.respondText("Error proxying request: ${e.message}", status = io.ktor.http.HttpStatusCode.InternalServerError)
                         e.printStackTrace()
                     }
                 } else {
-                    call.respondText("No route found for ${host}", status = io.ktor.http.HttpStatusCode.NotFound)
+                    call.respondText("No route found for ${requestHost}", status = io.ktor.http.HttpStatusCode.NotFound)
                 }
             }
         }
@@ -141,14 +146,14 @@ fun startContainer(routeConfig: RouteConfig): DockerContainer {
 
     val inspectContainerResponse = dockerClient.inspectContainerCmd(container.id).exec()
     val portBinding = inspectContainerResponse.networkSettings.ports.bindings.entries.firstOrNull {
-        it.key.privatePort == routeConfig.port // Corrected: Use privatePort
+        it.key.port == routeConfig.port
     }?.value?.firstOrNull()
 
     if (portBinding == null) {
         throw RuntimeException("Failed to get port binding for container ${container.id}")
     }
 
-    val hostPort = portBinding.hostPort.toInt() // Corrected: Use hostPort
+    val hostPort = portBinding.hostPortSpec.toInt()
     println("Container started with ID: ${container.id}, Host Port: ${hostPort}")
 
     return DockerContainer(container.id, hostPort)

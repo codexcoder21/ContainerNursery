@@ -13,6 +13,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.TestInstance
 import java.util.concurrent.TimeUnit
 
@@ -20,6 +21,7 @@ import java.util.concurrent.TimeUnit
 class ApplicationTest {
 
     @Test
+    @Disabled("Requires Docker daemon to run")
     fun testHelloWorldRoute() = testApplication {
         application {
             module()
