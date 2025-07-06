@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm") version "1.9.22"
     application
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "org.example"
@@ -25,6 +26,8 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation(kotlin("test"))
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
+    
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
 }
 
 kotlin {
@@ -39,8 +42,11 @@ tasks.test {
     useJUnitPlatform()
 }
 
-tasks.jar {
+tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
+    archiveBaseName.set("DockerWebServer")
+    archiveClassifier.set("all")
     manifest {
-        attributes["Main-Class"] = "org.example.Main"
+        attributes(mapOf("Main-Class" to application.mainClass.get()))
     }
+    from(project.configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
 }
