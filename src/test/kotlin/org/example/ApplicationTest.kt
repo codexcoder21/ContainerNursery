@@ -1,40 +1,34 @@
 package org.example
 
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.server.testing.testApplication
+import kotlin.test.*
+import io.ktor.http.*
+import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
-import java.net.ServerSocket
-import kotlin.test.assertEquals
+import org.junit.jupiter.api.TestInstance
+import java.util.concurrent.TimeUnit
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ApplicationTest {
-    private lateinit var server: ApplicationEngine
-    private var port: Int = 0
-
-    @BeforeEach
-    fun setUp() {
-        val socket = ServerSocket(0)
-        port = socket.localPort
-        socket.close()
-        server = embeddedServer(Netty, port = port, module = { module() }).start()
-    }
-
-    @AfterEach
-    fun tearDown() {
-        server.stop(1000, 1000)
-    }
 
     @Test
-    fun testHelloWorld() {
-        val client = HttpClient.newHttpClient()
-        val request = HttpRequest.newBuilder(URI.create("http://localhost:$port/"))
-            .build()
-        val response = client.send(request, HttpResponse.BodyHandlers.ofString())
-        assertEquals("Hello World!", response.body())
+    fun testHelloWorldRoute() = testApplication {
+        application {
+            module()
+        }
+        val response = client.get("/") {
+            headers.append(HttpHeaders.Host, "www.helloworld.com")
+        }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertTrue(response.bodyAsText().contains("Hello World"))
     }
 }
