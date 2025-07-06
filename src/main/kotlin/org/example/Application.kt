@@ -32,18 +32,14 @@ data class Config(
 
 
 
-fun Application.module(dockerManager: DockerManager? = null, httpClient: HttpClient? = null) {
-    val configStream = Application::class.java.classLoader.getResourceAsStream("config.json")
-        ?: throw RuntimeException("config.json not found")
-    val config: Config = Gson().fromJson(configStream.reader(), object : TypeToken<Config>() {}.type)
-
-    val currentDockerManager = dockerManager ?: DockerManager(config)
+fun Application.module(appConfig: Config, dockerManager: DockerManager? = null, httpClient: HttpClient? = null) {
+    val currentDockerManager = dockerManager ?: DockerManager(appConfig)
 
     routing {
         route("/{...}") {
             handle {
                 val requestHost = call.request.host()
-                val routeConfig = config.routes.find { it.domain == requestHost }
+                val routeConfig = appConfig.routes.find { it.domain == requestHost }
 
                 if (routeConfig != null) {
                     val container = runBlocking {
@@ -93,6 +89,9 @@ fun Application.module(dockerManager: DockerManager? = null, httpClient: HttpCli
     }
 }
 
-fun main() {
-    embeddedServer(Netty, port = 8080) { module(httpClient = HttpClient(CIO)) }.start(wait = true)
+fun main(args: Array<String>) {
+    val configFilePath = args.firstOrNull() ?: throw IllegalArgumentException("Config file path must be provided as a command line argument.")
+    val config: Config = Gson().fromJson(File(configFilePath).readText(), object : TypeToken<Config>() {}.type)
+
+    embeddedServer(Netty, port = 8080) { module(config, httpClient = HttpClient(CIO)) }.start(wait = true)
 }

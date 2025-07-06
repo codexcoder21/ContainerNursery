@@ -4,7 +4,7 @@ This project implements a web server that acts as a proxy, dynamically managing 
 
 ## Configuration (`config.json`)
 
-The server's behavior is defined by the `config.json` file, located in `src/main/resources/`. This file specifies a list of routes, each mapping a domain to a Docker image and its associated settings.
+The server's behavior is defined by a json configuration file, specified as an additional argument. This file specifies a list of routes, each mapping a domain to a Docker image and its associated settings.
 
 Example `config.json`:
 ```json
@@ -49,6 +49,16 @@ To run the application:
     ```
 2.  **Run the JAR**:
     ```bash
-    java -jar build/libs/DockerWebServer-all.jar
+    java -jar build/libs/DockerWebServer-all.jar <path/to/your/config.json>
+    ```
+    Replace `<path/to/your/config.json>` with the actual path to your configuration file.
     ```
     The server will start on port 8080 by default. Ensure your Docker daemon is running.
+
+## TODO:
+* Maximum concurrency limits for each instance of the docker image
+* Error reporting if the docker image never becomes available
+
+
+
+

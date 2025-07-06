@@ -27,13 +27,26 @@ class ApplicationTest {
 
     @Test
     fun testHelloWorldRoute() = testApplication {
-        val configStream = Application::class.java.classLoader.getResourceAsStream("config.json")
-            ?: throw RuntimeException("config.json not found for test")
-        val config: Config = Gson().fromJson(configStream.reader(), object : TypeToken<Config>() {}.type)
+        val tempConfigFile = File.createTempFile("test_config", ".json")
+        val configContent = """
+            {
+              "routes": [
+                {
+                  "domain": "www.helloworld.com",
+                  "image": "hello-world-docker-image:latest",
+                  "keepWarmSeconds": 30,
+                  "port": 8080
+                }
+              ]
+            }
+        """.trimIndent()
+        tempConfigFile.writeText(configContent)
+
+        val config: Config = Gson().fromJson(tempConfigFile.readText(), object : TypeToken<Config>() {}.type)
         val dockerManager = DockerManager(config)
 
         application {
-            module(dockerManager)
+            module(config, dockerManager)
         }
 
         val client = createClient {
@@ -47,6 +60,7 @@ class ApplicationTest {
         assertEquals(HttpStatusCode.OK, response.status)
         assertTrue(response.bodyAsText().contains("Hello World"))
         dockerManager.shutdown()
+        tempConfigFile.delete()
     }
 }
 
