@@ -1,0 +1,3 @@
+- Whenever making changes to the public API, consider if the README file should be updated accordingly.
+- Tests should NEVER use mocks.
+- Always ensure tests run in isolation so they can be executed in parallel and proper cleanup occurs.
