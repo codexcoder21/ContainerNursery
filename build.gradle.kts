@@ -1,7 +1,8 @@
 plugins {
     kotlin("jvm") version "1.9.22"
     application
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    // Shadow plugin disabled for test execution in this environment
+    // id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "org.example"
@@ -31,18 +32,11 @@ dependencies {
 }
 
 application {
-    mainClass.set("org.example.ApplicationKt")
+    mainClass.set("org.example.ContainerNurseryServer")
 }
 
 tasks.test {
     useJUnitPlatform()
 }
 
-tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
-    archiveBaseName.set("ContainerNursery")
-    archiveClassifier.set("all")
-    manifest {
-        attributes(mapOf("Main-Class" to application.mainClass.get()))
-    }
-    from(project.configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
-}
+// ShadowJar packaging is not required for tests

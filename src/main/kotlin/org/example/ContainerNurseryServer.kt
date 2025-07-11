@@ -35,7 +35,7 @@ fun Application.module(
             handle {
                 val container = runBlocking { currentNursery.getOrCreate(call) }
                 if (container != null) {
-                    runBlocking { container.handle(call) }
+                    runBlocking { currentNursery.forwardRequest(container, call) }
                 } else {
                     call.respondText(
                         "No route found for ${call.request.host()}",
@@ -52,10 +52,13 @@ fun Application.module(
     }
 }
 
-fun main(args: Array<String>) {
-    val configFilePath = args.firstOrNull() ?: "config.json"
-    val router = requestRouterFromFile(configFilePath)
-    embeddedServer(Netty, port = 8080) {
-        module(router)
-    }.start(wait = true)
+object ContainerNurseryServer {
+    @JvmStatic
+    fun main(args: Array<String>) {
+        val configFilePath = args.firstOrNull() ?: "config.json"
+        val router = requestRouterFromFile(configFilePath)
+        embeddedServer(Netty, port = 8080) {
+            module(router)
+        }.start(wait = true)
+    }
 }
