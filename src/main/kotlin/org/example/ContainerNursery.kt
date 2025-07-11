@@ -1,0 +1,70 @@
+package org.example
+
+import com.github.dockerjava.api.DockerClient
+import com.github.dockerjava.core.DefaultDockerClientConfig
+import com.github.dockerjava.core.DockerClientImpl
+import com.github.dockerjava.httpclient5.ApacheDockerHttpClient
+import java.time.Duration
+import java.util.concurrent.ConcurrentHashMap
+
+class ContainerNursery(
+    private val router: RequestRouter,
+    private val clock: Clock = SystemClock()
+) {
+    private val dockerClient: DockerClient
+    private val activeContainers = ConcurrentHashMap<String, DockerBackedContainer>()
+    private val containerAccessTimes = ConcurrentHashMap<String, Long>()
+    private val routeConfigs = ConcurrentHashMap<String, RouteConfig>()
+    private var checkTask: Scheduled? = null
+
+    init {
+        val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
+            .withDockerHost("unix:///var/run/docker.sock").build()
+        val http = ApacheDockerHttpClient.Builder()
+            .dockerHost(config.dockerHost)
+            .connectionTimeout(Duration.ofSeconds(30))
+            .responseTimeout(Duration.ofSeconds(30))
+            .build()
+        dockerClient = DockerClientImpl.getInstance(config, http)
+        scheduleCheck()
+    }
+
+    private fun scheduleCheck() {
+        checkTask = clock.schedule(clock.now() + 10_000) {
+            checkInactive()
+            scheduleCheck()
+        }
+    }
+
+    private fun checkInactive() {
+        val now = clock.now()
+        activeContainers.forEach { (domain, container) ->
+            val route = routeConfigs[domain] ?: return@forEach
+            val last = containerAccessTimes.getOrDefault(domain, now)
+            if (now - last > route.keepWarmSeconds * 1000) {
+                println("Shutting down container for $domain due to inactivity.")
+                container.shutdown()
+                activeContainers.remove(domain)
+                containerAccessTimes.remove(domain)
+                routeConfigs.remove(domain)
+            }
+        }
+    }
+
+    suspend fun getOrCreate(call: io.ktor.server.application.ApplicationCall): DockerBackedContainer? {
+        val route = router.route(call) ?: return null
+        routeConfigs.putIfAbsent(route.domain, route)
+        val container = activeContainers.computeIfAbsent(route.domain) {
+            DockerBackedContainer(route.image, route.port, dockerClient)
+        }
+        containerAccessTimes[route.domain] = clock.now()
+        container.start()
+        return container
+    }
+
+    fun shutdown() {
+        println("Shutting down ContainerNursery, stopping all active containers.")
+        activeContainers.values.forEach { it.shutdown() }
+        checkTask?.cancel()
+    }
+}

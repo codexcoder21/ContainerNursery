@@ -1,5 +1,5 @@
-# Docker Web Server Proxy
-
+# ContainerNursery
+Puts Docker Containers to sleep and wakes them back up when they're needed
 This project implements a web server that acts as a proxy, dynamically managing Docker containers based on incoming requests. It reads a configuration file to map domain names to specific Docker images, starts these images (using the default Docker runtime), and forwards requests to the running containers. It also includes a "keep-warm" mechanism to shut down inactive containers.
 
 ## Configuration (`config.json`)
@@ -49,7 +49,7 @@ To run the application:
     ```
 2.  **Run the JAR**:
     ```bash
-    java -jar build/libs/DockerWebServer-all.jar <path/to/your/config.json>
+    java -jar build/libs/ContainerNursery-all.jar <path/to/your/config.json>
     ```
     Replace `<path/to/your/config.json>` with the actual path to your configuration file.
     ```
