@@ -25,9 +25,10 @@ fun Application.module(
     router: RequestRouter,
     nursery: ContainerNursery? = null,
     clock: Clock = SystemClock(),
+    containerFactory: ContainerFactory = org.example.docker.DockerContainerFactory(),
     httpClient: HttpClient? = null
 ) {
-    val currentNursery = nursery ?: ContainerNursery(router, clock)
+    val currentNursery = nursery ?: ContainerNursery(router, clock, containerFactory)
 
     routing {
         route("/{...}") {

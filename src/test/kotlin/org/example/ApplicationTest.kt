@@ -30,7 +30,7 @@ class ApplicationTest {
 
         val config: Config = Gson().fromJson(tempConfigFile.readText(), object : TypeToken<Config>() {}.type)
         val router = ConfigFileRequestRouter(config)
-        val nursery = ContainerNursery(router)
+        val nursery = ContainerNursery(router, containerFactory = org.example.docker.DockerContainerFactory())
 
         application {
             module(router, nursery)

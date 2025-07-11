@@ -1,31 +1,18 @@
 package org.example
 
-import com.github.dockerjava.api.DockerClient
-import com.github.dockerjava.core.DefaultDockerClientConfig
-import com.github.dockerjava.core.DockerClientImpl
-import com.github.dockerjava.httpclient5.ApacheDockerHttpClient
-import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 
 class ContainerNursery(
     private val router: RequestRouter,
-    private val clock: Clock = SystemClock()
+    private val clock: Clock = SystemClock(),
+    private val containerFactory: ContainerFactory
 ) {
-    private val dockerClient: DockerClient
-    private val activeContainers = ConcurrentHashMap<String, DockerBackedContainer>()
+    private val activeContainers = ConcurrentHashMap<String, Container>()
     private val containerAccessTimes = ConcurrentHashMap<String, Long>()
     private val routeConfigs = ConcurrentHashMap<String, RouteConfig>()
     private var checkTask: Scheduled? = null
 
     init {
-        val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
-            .withDockerHost("unix:///var/run/docker.sock").build()
-        val http = ApacheDockerHttpClient.Builder()
-            .dockerHost(config.dockerHost)
-            .connectionTimeout(Duration.ofSeconds(30))
-            .responseTimeout(Duration.ofSeconds(30))
-            .build()
-        dockerClient = DockerClientImpl.getInstance(config, http)
         scheduleCheck()
     }
 
@@ -51,11 +38,11 @@ class ContainerNursery(
         }
     }
 
-    suspend fun getOrCreate(call: io.ktor.server.application.ApplicationCall): DockerBackedContainer? {
+    suspend fun getOrCreate(call: io.ktor.server.application.ApplicationCall): Container? {
         val route = router.route(call) ?: return null
         routeConfigs.putIfAbsent(route.domain, route)
         val container = activeContainers.computeIfAbsent(route.domain) {
-            DockerBackedContainer(route.image, route.port, dockerClient)
+            containerFactory.create(route)
         }
         containerAccessTimes[route.domain] = clock.now()
         container.start()
