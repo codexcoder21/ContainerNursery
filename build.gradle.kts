@@ -30,10 +30,6 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
 }
 
-kotlin {
-    jvmToolchain(21)
-}
-
 application {
     mainClass.set("org.example.ApplicationKt")
 }
