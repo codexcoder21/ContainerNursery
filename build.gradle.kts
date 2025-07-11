@@ -43,7 +43,7 @@ tasks.test {
 }
 
 tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
-    archiveBaseName.set("DockerWebServer")
+    archiveBaseName.set("ContainerNursery")
     archiveClassifier.set("all")
     manifest {
         attributes(mapOf("Main-Class" to application.mainClass.get()))
