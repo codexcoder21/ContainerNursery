@@ -1,6 +1,6 @@
 # ContainerNursery
 Puts Docker Containers to sleep and wakes them back up when they're needed
-This project implements a web server that acts as a proxy, dynamically managing Docker containers based on incoming requests. It reads a configuration file to map domain names to specific Docker images, starts these images (using the default Docker runtime), and forwards requests to the running containers. It also includes a "keep-warm" mechanism to shut down inactive containers.
+This project implements a web server that acts as a proxy, dynamically managing containers based on incoming requests. By default it interacts with Docker, but the container runtime can be swapped by providing a different `ContainerFactory`. The server reads a configuration file to map domain names to specific Docker images, starts these images, and forwards requests to the running containers. It also includes a "keep-warm" mechanism to shut down inactive containers.
 
 ## Configuration (`config.json`)
 
@@ -37,7 +37,7 @@ The server operates as follows:
 2.  **Proxying**: The server acts as a reverse proxy, forwarding incoming HTTP requests to the appropriate Docker container and relaying the container's response back to the client.
 3.  **Port Mapping**: The server automatically handles port mapping. The Docker container's internal port (specified by the `port` field in `config.json`) is exposed on a dynamically assigned host port. The server then proxies requests to this host port.
 4.  **Keep-Warm Mechanism**: To conserve resources, containers are automatically shut down if they receive no requests for the duration specified by `keepWarmSeconds`. A background task periodically checks for inactive containers and stops them.
-5.  **Runtime**: The server uses the default Docker runtime for container execution.
+5.  **Runtime**: The server uses the default Docker runtime for container execution. You can supply a custom `ContainerFactory` when constructing `ContainerNursery` if you want to manage containers without Docker.
 
 ## Running the Application
 
