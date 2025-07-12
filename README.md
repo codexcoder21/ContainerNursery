@@ -58,12 +58,14 @@ To run the application:
 ## MCPServer
 
 This project also includes a simple Jetty-based `MCPServer`. It exposes an HTTP
-endpoint at `/password` that returns the string `P@ssw0rd`.
+endpoint at `/password` that returns the string `P@ssw0rd`. By default the
+server listens on port `12006`; you can override this with `-p <port>`.
 
 Run it with:
 
 ```bash
-java -cp build/classes/kotlin/main org.example.MCPServerKt
+./gradlew shadowJar
+java -cp build/libs/ContainerNursery-all.jar org.example.MCPServerKt
 ```
 
 ## TODO:

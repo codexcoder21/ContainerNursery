@@ -6,10 +6,16 @@ import org.eclipse.jetty.servlet.ServletHolder
 import jakarta.servlet.http.HttpServlet
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.apache.commons.cli.DefaultParser
+import org.apache.commons.cli.HelpFormatter
+import org.apache.commons.cli.Options
+import org.apache.commons.cli.ParseException
 
 fun getSecretPassword(): String = "P@ssw0rd"
 
-class MCPServer(private val port: Int = 0) {
+const val DEFAULT_PORT = 12006
+
+class MCPServer(private val port: Int = DEFAULT_PORT) {
     val jettyServer = Server(port)
     init {
         val context = ServletContextHandler(ServletContextHandler.NO_SESSIONS)
@@ -31,10 +37,22 @@ class MCPServer(private val port: Int = 0) {
     }
 }
 
-fun main() {
-    val server = MCPServer(8080)
+fun main(args: Array<String>) {
+    val options = Options().apply {
+        addOption("p", "port", true, "Port to listen on (default $DEFAULT_PORT)")
+    }
+
+    val parser = DefaultParser()
+    val port = try {
+        val cmd = parser.parse(options, args)
+        cmd.getOptionValue("p")?.toIntOrNull() ?: DEFAULT_PORT
+    } catch (e: ParseException) {
+        HelpFormatter().printHelp("MCPServer", options)
+        return
+    }
+
+    val server = MCPServer(port)
     server.start()
-    println("MCPServer started on port 8080")
-    server.port() // to trigger port evaluation
+    println("MCPServer started on port ${server.port()}")
     server.jettyServer.join()
 }

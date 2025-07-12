@@ -24,10 +24,12 @@ dependencies {
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("org.eclipse.jetty:jetty-server:11.0.17")
     implementation("org.eclipse.jetty:jetty-servlet:11.0.17")
+    implementation("commons-cli:commons-cli:1.6.0")
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.0")
     testImplementation(kotlin("test-junit5"))
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
     
