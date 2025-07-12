@@ -55,6 +55,17 @@ To run the application:
     ```
     The server will start on port 8080 by default. Ensure your Docker daemon is running.
 
+## MCPServer
+
+This project also includes a simple Jetty-based `MCPServer`. It exposes an HTTP
+endpoint at `/password` that returns the string `P@ssw0rd`.
+
+Run it with:
+
+```bash
+java -cp build/classes/kotlin/main org.example.MCPServerKt
+```
+
 ## TODO:
 * Maximum concurrency limits for each instance of the docker image
 * Error reporting if the docker image never becomes available

@@ -22,10 +22,13 @@ dependencies {
     implementation("com.github.docker-java:docker-java:3.5.1")
     implementation("com.github.docker-java:docker-java-transport-httpclient5:3.5.1")
     implementation("com.google.code.gson:gson:2.10.1")
+    implementation("org.eclipse.jetty:jetty-server:11.0.17")
+    implementation("org.eclipse.jetty:jetty-servlet:11.0.17")
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation(kotlin("test"))
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    testImplementation(kotlin("test-junit5"))
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
     
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
