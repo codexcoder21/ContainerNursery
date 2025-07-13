@@ -1,7 +1,6 @@
 package org.example
 
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+import org.json.JSONObject
 import io.ktor.server.request.host
 import io.ktor.server.application.ApplicationCall
 import java.io.File
@@ -18,6 +17,25 @@ class ConfigFileRequestRouter(private val config: Config) : RequestRouter {
 }
 
 fun requestRouterFromFile(path: String): RequestRouter {
-    val config: Config = Gson().fromJson(File(path).readText(), object : TypeToken<Config>() {}.type)
+    val config = configFromFile(path)
     return ConfigFileRequestRouter(config)
+}
+
+fun configFromFile(path: String): Config {
+    val text = File(path).readText()
+    val root = JSONObject(text)
+    val routesJson = root.getJSONArray("routes")
+    val routes = mutableListOf<RouteConfig>()
+    for (i in 0 until routesJson.length()) {
+        val obj = routesJson.getJSONObject(i)
+        val type = RouteType.valueOf(obj.optString("type", "http").uppercase())
+        routes += RouteConfig(
+            domain = obj.getString("domain"),
+            image = obj.getString("image"),
+            keepWarmSeconds = obj.getLong("keepWarmSeconds"),
+            port = obj.getInt("port"),
+            type = type
+        )
+    }
+    return Config(routes)
 }

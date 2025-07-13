@@ -13,6 +13,7 @@ class CrashDummyBackedContainer(
     var started = 0
     var handled = 0
     var shutdowns = 0
+    override val hostPort: Int = 0
 
     override suspend fun start() {
         started++

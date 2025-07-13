@@ -24,6 +24,6 @@ class DockerContainerFactory : ContainerFactory {
     }
 
     override fun create(route: RouteConfig): Container {
-        return DockerBackedContainer(route.image, route.port, dockerClient)
+        return DockerBackedContainer(route.image, 8080, route.type, dockerClient)
     }
 }

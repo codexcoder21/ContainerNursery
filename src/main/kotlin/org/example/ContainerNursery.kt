@@ -65,6 +65,10 @@ class ContainerNursery(
 
     internal suspend fun getOrCreate(call: io.ktor.server.application.ApplicationCall): Container? {
         val route = router.route(call) ?: return null
+        return getOrCreate(route)
+    }
+
+    internal suspend fun getOrCreate(route: RouteConfig): Container {
         routeConfigs.putIfAbsent(route.domain, route)
         val container = activeContainers.computeIfAbsent(route.domain) {
             containerFactory.create(route)
