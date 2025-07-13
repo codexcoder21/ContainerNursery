@@ -6,6 +6,7 @@ import io.ktor.http.*
 import io.ktor.server.testing.testApplication
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
+import org.example.RouteType
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -15,14 +16,14 @@ class ContainerNurseryTest {
         override suspend fun route(call: io.ktor.server.application.ApplicationCall): RouteConfig? = config
     }
 
-    private val route = RouteConfig("test.com", "dummy", 300, 8080)
+    private val route = RouteConfig("test.com", "dummy", 300, 8080, RouteType.HTTP)
 
     @Test
     fun helloContainerResponds() = testApplication {
         val clock = SystemClock()
         val container = HelloDummyBackedContainer(clock)
         val nursery = ContainerNursery(StaticRouter(route), clock) { container }
-        application { module(StaticRouter(route), nursery, clock, { container }) }
+        application { module(Config(listOf(route)), StaticRouter(route), nursery, clock, { container }) }
         val response = client.get("/") { header(HttpHeaders.Host, route.domain) }
         assertEquals(HttpStatusCode.OK, response.status)
         assertTrue(response.bodyAsText().contains("Hello World"))
@@ -34,7 +35,7 @@ class ContainerNurseryTest {
         val clock = ManualClock()
         val container = CrashDummyBackedContainer(startForever = true)
         val nursery = ContainerNursery(StaticRouter(route), clock, CrashDummyContainerFactory { container })
-        application { module(StaticRouter(route), nursery, clock, CrashDummyContainerFactory { container }) }
+        application { module(Config(listOf(route)), StaticRouter(route), nursery, clock, CrashDummyContainerFactory { container }) }
 
         val deferred = GlobalScope.async { client.get("/") { header(HttpHeaders.Host, route.domain) } }
         clock.advanceBy(60_000)
@@ -48,7 +49,7 @@ class ContainerNurseryTest {
         val clock = ManualClock()
         val container = CrashDummyBackedContainer(handleForever = true)
         val nursery = ContainerNursery(StaticRouter(route), clock, CrashDummyContainerFactory { container })
-        application { module(StaticRouter(route), nursery, clock, CrashDummyContainerFactory { container }) }
+        application { module(Config(listOf(route)), StaticRouter(route), nursery, clock, CrashDummyContainerFactory { container }) }
 
         val deferred = GlobalScope.async { client.get("/") { header(HttpHeaders.Host, route.domain) } }
         clock.advanceBy(300_000)
@@ -62,7 +63,7 @@ class ContainerNurseryTest {
         val clock = ManualClock()
         val container = CrashDummyBackedContainer(shutdownForever = true)
         val nursery = ContainerNursery(StaticRouter(route), clock, CrashDummyContainerFactory { container })
-        application { module(StaticRouter(route), nursery, clock, CrashDummyContainerFactory { container }) }
+        application { module(Config(listOf(route)), StaticRouter(route), nursery, clock, CrashDummyContainerFactory { container }) }
 
         client.get("/") { header(HttpHeaders.Host, route.domain) }
         nursery.shutdown()
@@ -75,7 +76,7 @@ class ContainerNurseryTest {
         val clock = ManualClock()
         val container = CrashDummyBackedContainer()
         val nursery = ContainerNursery(StaticRouter(route.copy(keepWarmSeconds = 300)), clock, CrashDummyContainerFactory { container })
-        application { module(StaticRouter(route.copy(keepWarmSeconds = 300)), nursery, clock, CrashDummyContainerFactory { container }) }
+        application { module(Config(listOf(route.copy(keepWarmSeconds = 300))), StaticRouter(route.copy(keepWarmSeconds = 300)), nursery, clock, CrashDummyContainerFactory { container }) }
 
         client.get("/") { header(HttpHeaders.Host, route.domain) }
         clock.advanceBy(300_000)
@@ -89,7 +90,7 @@ class ContainerNurseryTest {
         val clock = ManualClock()
         val container = CrashDummyBackedContainer()
         val nursery = ContainerNursery(StaticRouter(route.copy(keepWarmSeconds = 300)), clock, CrashDummyContainerFactory { container })
-        application { module(StaticRouter(route.copy(keepWarmSeconds = 300)), nursery, clock, CrashDummyContainerFactory { container }) }
+        application { module(Config(listOf(route.copy(keepWarmSeconds = 300))), StaticRouter(route.copy(keepWarmSeconds = 300)), nursery, clock, CrashDummyContainerFactory { container }) }
 
         client.get("/") { header(HttpHeaders.Host, route.domain) }
         clock.advanceBy(100_000)

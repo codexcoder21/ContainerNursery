@@ -14,7 +14,8 @@ Example `config.json`:
       "domain": "www.helloworld.com",
       "image": "hello-world-docker-image:latest",
       "keepWarmSeconds": 30,
-      "port": 8080
+      "port": 8080,
+      "type": "http"
     }
   ]
 }
@@ -25,7 +26,8 @@ Example `config.json`:
 *   `domain` (String): The domain name that this route will handle (e.g., `www.helloworld.com`).
 *   `image` (String): The Docker image name and tag to be used for this domain (e.g., `hello-world-docker-image:latest`). This image should be available in your local Docker registry.
 *   `keepWarmSeconds` (Long): The duration in seconds after which an inactive Docker container for this domain will be shut down. If there are no incoming requests for a container within this period, it will be stopped and removed.
-*   `port` (Int): The internal port that the Docker image listens on. The server will set the `PORT` environment variable inside the container to this value. By default, images are expected to listen on port 8080, but this can be overridden.
+*   `port` (Int): The external port that the proxy server listens on for this route.
+*   `type` (String): Connection type, one of `http`, `tcp`, or `udp`. `http` routes are handled by the web server; `tcp` and `udp` routes listen on the specified port and proxy raw traffic to the container.
 
 ## Server Behavior
 
@@ -35,7 +37,7 @@ The server operates as follows:
     *   If a container is active, the request is forwarded to it.
     *   If no container is active, a new Docker container is started using the specified image.
 2.  **Proxying**: The server acts as a reverse proxy, forwarding incoming HTTP requests to the appropriate Docker container and relaying the container's response back to the client.
-3.  **Port Mapping**: The server automatically handles port mapping. The Docker container's internal port (specified by the `port` field in `config.json`) is exposed on a dynamically assigned host port. The server then proxies requests to this host port.
+3.  **Port Mapping**: The server automatically exposes the container's internal port (assumed to be `8080`) on a dynamically assigned host port and proxies traffic to it. The external port that clients connect to is specified by the `port` field.
 4.  **Keep-Warm Mechanism**: To conserve resources, containers are automatically shut down if they receive no requests for the duration specified by `keepWarmSeconds`. A background task periodically checks for inactive containers and stops them.
 5.  **Runtime**: The server uses the default Docker runtime for container execution. You can supply a custom `ContainerFactory` when constructing `ContainerNursery` if you want to manage containers without Docker.
 

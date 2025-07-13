@@ -15,14 +15,18 @@ import io.ktor.server.response.respondBytesWriter
 import io.ktor.utils.io.copyTo
 import kotlinx.coroutines.delay
 import org.example.Container
+import org.example.RouteType
 
 class DockerBackedContainer(
     private val image: String,
     private val internalPort: Int,
+    private val type: RouteType,
     private val dockerClient: DockerClient
 ) : Container {
     private var containerId: String? = null
-    private var hostPort: Int = -1
+    private var _hostPort: Int = -1
+    override val hostPort: Int
+        get() = _hostPort
 
     override suspend fun start() {
         if (containerId != null) return
@@ -34,8 +38,10 @@ class DockerBackedContainer(
         val inspect = dockerClient.inspectContainerCmd(container.id).exec()
         val portBinding = inspect.networkSettings.ports.bindings.entries.firstOrNull { it.key.port == internalPort }?.value?.firstOrNull()
             ?: throw RuntimeException("Failed to get port binding for container ${container.id}")
-        hostPort = portBinding.hostPortSpec.toInt()
-        waitUntilReady("localhost", hostPort)
+        _hostPort = portBinding.hostPortSpec.toInt()
+        if (type == RouteType.HTTP) {
+            waitUntilReady("localhost", _hostPort)
+        }
         containerId = container.id
     }
 
@@ -46,7 +52,7 @@ class DockerBackedContainer(
             val targetUrl = URLBuilder().apply {
                 protocol = URLProtocol.HTTP
                 host = "localhost"
-                port = hostPort
+                port = _hostPort
                 encodedPath = call.request.uri.substringBefore("?")
                 parameters.appendAll(call.request.queryParameters)
             }

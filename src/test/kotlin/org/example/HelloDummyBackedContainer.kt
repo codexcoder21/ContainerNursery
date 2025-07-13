@@ -12,6 +12,7 @@ class HelloDummyBackedContainer(
 ) : Container {
     var started = 0
     private val startedLatch = CountDownLatch(1)
+    override val hostPort: Int = 0
 
     private suspend fun delay() = suspendCancellableCoroutine<Unit> { cont ->
         val scheduled = clock.schedule(clock.now() + delayMs) { cont.resume(Unit) }

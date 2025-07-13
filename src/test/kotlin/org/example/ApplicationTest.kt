@@ -6,8 +6,9 @@ import io.ktor.server.testing.testApplication
 import kotlin.test.*
 import io.ktor.http.*
 import java.io.File
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+import org.example.HelloDummyBackedContainer
+import org.example.SystemClock
+import org.example.ContainerFactory
 
 class ApplicationTest {
 
@@ -21,19 +22,21 @@ class ApplicationTest {
                   "domain": "www.helloworld.com",
                   "image": "hello-world-docker-image:latest",
                   "keepWarmSeconds": 30,
-                  "port": 8080
+                  "port": 8080,
+                  "type": "http"
                 }
               ]
             }
         """.trimIndent()
         tempConfigFile.writeText(configContent)
 
-        val config: Config = Gson().fromJson(tempConfigFile.readText(), object : TypeToken<Config>() {}.type)
+        val clock = SystemClock()
+        val config: Config = configFromFile(tempConfigFile.absolutePath)
         val router = ConfigFileRequestRouter(config)
-        val nursery = ContainerNursery(router, containerFactory = org.example.docker.DockerContainerFactory())
+        val nursery = ContainerNursery(router, clock) { HelloDummyBackedContainer(clock) }
 
         application {
-            module(router, nursery)
+            module(config, router, nursery, clock, ContainerFactory { HelloDummyBackedContainer(clock) })
         }
 
         val client = createClient {
