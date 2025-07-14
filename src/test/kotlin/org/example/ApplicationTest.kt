@@ -20,7 +20,7 @@ class ApplicationTest {
               "routes": [
                 {
                   "domain": "www.helloworld.com",
-                  "image": "hello-world-docker-image:latest",
+                  "image": "dummy://hello-world-docker-image:latest",
                   "keepWarmSeconds": 30,
                   "port": 8080,
                   "type": "http"
