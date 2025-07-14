@@ -12,7 +12,7 @@ Example `config.json`:
   "routes": [
     {
       "domain": "www.helloworld.com",
-      "image": "hello-world-docker-image:latest",
+      "image": "dockerlocal://hello-world-docker-image:latest",
       "keepWarmSeconds": 30,
       "port": 8080,
       "type": "http"
@@ -24,7 +24,7 @@ Example `config.json`:
 ### Route Configuration Fields:
 
 *   `domain` (String): The domain name that this route will handle (e.g., `www.helloworld.com`).
-*   `image` (String): The Docker image name and tag to be used for this domain (e.g., `hello-world-docker-image:latest`). This image should be available in your local Docker registry.
+*   `image` (String): Image reference prefixed with a protocol. For example `dockerlocal://hello-world-docker-image:latest` loads an image already present locally. Other protocols include `dockerremote://` for pulling from a registry and `dockerfile://` for loading from an exported image file.
 *   `keepWarmSeconds` (Long): The duration in seconds after which an inactive Docker container for this domain will be shut down. If there are no incoming requests for a container within this period, it will be stopped and removed.
 *   `port` (Int): The external port that the proxy server listens on for this route.
 *   `type` (String): Connection type, one of `http`, `tcp`, or `udp`. `http` routes are handled by the web server; `tcp` and `udp` routes listen on the specified port and proxy raw traffic to the container.

@@ -16,7 +16,7 @@ class ContainerNurseryTest {
         override suspend fun route(call: io.ktor.server.application.ApplicationCall): RouteConfig? = config
     }
 
-    private val route = RouteConfig("test.com", "dummy", 300, 8080, RouteType.HTTP)
+    private val route = RouteConfig("test.com", "dummy://dummy", 300, 8080, RouteType.HTTP)
 
     @Test
     fun helloContainerResponds() = testApplication {

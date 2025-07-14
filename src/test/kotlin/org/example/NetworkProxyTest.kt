@@ -18,7 +18,7 @@ import org.example.RouteType
 class NetworkProxyTest {
     @Test
     fun tcpRouteForwards() {
-        val route = RouteConfig("tcp.test", "dummy", 30, 9011, RouteType.TCP)
+        val route = RouteConfig("tcp.test", "dummy://dummy", 30, 9011, RouteType.TCP)
         val container = TcpDummyBackedContainer()
         val config = Config(listOf(route))
         val nursery = ContainerNursery(object : RequestRouter {
@@ -46,7 +46,7 @@ class NetworkProxyTest {
 
     @Test
     fun udpRouteForwards() {
-        val route = RouteConfig("udp.test", "dummy", 30, 9012, RouteType.UDP)
+        val route = RouteConfig("udp.test", "dummy://dummy", 30, 9012, RouteType.UDP)
         val container = UdpDummyBackedContainer()
         val config = Config(listOf(route))
         val nursery = ContainerNursery(object : RequestRouter {

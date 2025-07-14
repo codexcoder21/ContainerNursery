@@ -11,6 +11,7 @@ import io.ktor.server.routing.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.example.ServiceLoaderContainerFactory
 import java.net.ServerSocket
 import java.net.Socket
 import java.net.DatagramPacket
@@ -40,7 +41,7 @@ fun Application.module(
     router: RequestRouter = ConfigFileRequestRouter(Config(config.routes.filter { it.type == RouteType.HTTP })),
     nursery: ContainerNursery? = null,
     clock: Clock = SystemClock(),
-    containerFactory: ContainerFactory = org.example.docker.DockerContainerFactory(),
+    containerFactory: ContainerFactory = ServiceLoaderContainerFactory(),
     httpClient: HttpClient? = null
 ) {
     val currentNursery = nursery ?: ContainerNursery(router, clock, containerFactory)
